@@ -6,6 +6,23 @@
 from apiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
+import argparse, random, subprocess, shlex
+import logging as log
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-v", "--verbose", help="verbose logging", action="store_true")
+args = parser.parse_args()
+
+if args.verbose:
+    log.basicConfig(format="%(levelname)s %(relativeCreated)d "+
+                    "%(filename)s(%(funcName)s):%(lineno)d "+
+                    #"%(filename)s(%(funcName)s):%(lineno)d %(name)s: "+
+                    "%(message)s", level=log.DEBUG)
+    log.info("Verbose output.")
+else:
+    log.basicConfig(format="%(levelname)s: %(message)s")
+log.getLogger('googleapiclient.discovery_cache').setLevel(log.ERROR)
+log.getLogger('googleapiclient.discovery').setLevel(log.WARNING)
 
 class Photos():
     def __init__(self, scope, storefile, credsfile):
@@ -38,6 +55,7 @@ class Photos():
         try:
             return self.album_search(title, _tk=_results['nextPageToken'])
         except KeyError:
+            log.info("No album found")
             return None
 
     def list_media_album(self, albumId, _tk=None, _r=[]):
@@ -51,7 +69,18 @@ class Photos():
         try:
             return self.list_media_album(albumId, _tk=_results['nextPageToken'], _r=_r)
         except KeyError:
+            log.info("Found a list of %d media elements" % len(_r))
             return _r
+
+    def list_album_search(self, title):
+        "return a list of ID's of media in album 'title'"
+        _id_album = self.album_search(title)
+        if _id_album:
+            log.info("Album id found: %s" % _id_album)
+            return self.list_media_album(_id_album)
+        else:
+            log.warning("No album called '%s' found" % title)
+            raise LookupError("No album called '%s' found" % title)
 
 
 
@@ -65,7 +94,7 @@ def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonl
 if __name__ == "__main__" and not __doc__:
     s = session_gphotos()
     ida = s.album_search('wallpapers')
-    l = list_media_album(ida)
+    l = s.list_media_album(ida)
 
 
 
