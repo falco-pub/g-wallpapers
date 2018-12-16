@@ -9,20 +9,25 @@ from oauth2client import file, client, tools
 import argparse, random, subprocess, shlex, urllib.request
 import logging as log
 
-parser = argparse.ArgumentParser()
-parser.add_argument("-v", "--verbose", help="verbose logging", action="store_true")
-args = parser.parse_args()
+def parse_arg_verbose_log():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-v",
+                        "--verbose",
+                        help="verbose logging",
+                        action="store_true")
+    args = parser.parse_args()
 
-if args.verbose:
-    log.basicConfig(format="%(levelname)s %(relativeCreated)d "+
-                    "%(filename)s(%(funcName)s):%(lineno)d "+
-                    #"%(filename)s(%(funcName)s):%(lineno)d %(name)s: "+
-                    "%(message)s", level=log.DEBUG)
-    log.info("Verbose output.")
-else:
-    log.basicConfig(format="%(levelname)s: %(message)s")
-log.getLogger('googleapiclient.discovery_cache').setLevel(log.ERROR)
-log.getLogger('googleapiclient.discovery').setLevel(log.WARNING)
+    if args.verbose:
+        log.basicConfig(format="%(levelname)s %(relativeCreated)d "+
+                        "%(filename)s(%(funcName)s):%(lineno)d "+
+                        #"%(filename)s(%(funcName)s):%(lineno)d %(name)s: "+
+                        "%(message)s", level=log.DEBUG)
+        log.info("Verbose output.")
+    else:
+        log.basicConfig(format="%(levelname)s: %(message)s")
+    log.getLogger('googleapiclient.discovery_cache').setLevel(log.ERROR)
+    log.getLogger('googleapiclient.discovery').setLevel(log.WARNING)
+
 
 class Photos():
     def __init__(self, scope, storefile, credsfile):
@@ -60,7 +65,6 @@ class Photos():
 
     def list_media_album(self, albumId, _tk=None, _r=[]):
         "return a list of media items in album"
-        log.debug("called with args: %s, %s, %s" % (albumId, _tk, _r))
         _results = self.mediaItems().search(body={
             'albumId': albumId,
             'pageToken': _tk}).execute()
@@ -83,13 +87,13 @@ class Photos():
             raise LookupError("No album called '%s' found" % title)
 
 
-
-
 def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonly',
                  storefile='token.json',
                  credsfile='creds.json'):
     return Photos(scope, storefile, credsfile)
 
+
+parse_arg_verbose_log()
 
 if __name__ == "__main__" and not __doc__:
     s = session_gphotos()
