@@ -6,7 +6,7 @@
 from apiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-import argparse, random, subprocess, shlex
+import argparse, random, subprocess, shlex, urllib.request
 import logging as log
 
 parser = argparse.ArgumentParser()
@@ -59,13 +59,13 @@ class Photos():
             return None
 
     def list_media_album(self, albumId, _tk=None, _r=[]):
-        "return a list of ID's of media in album"
+        "return a list of media items in album"
+        log.debug("called with args: %s, %s, %s" % (albumId, _tk, _r))
         _results = self.mediaItems().search(body={
             'albumId': albumId,
             'pageToken': _tk}).execute()
         if 'mediaItems' in _results:
-            for _i in _results['mediaItems']:
-                _r.append(_i['id'])
+            _r.extend(_results['mediaItems'])
         try:
             return self.list_media_album(albumId, _tk=_results['nextPageToken'], _r=_r)
         except KeyError:
@@ -77,7 +77,7 @@ class Photos():
         _id_album = self.album_search(title)
         if _id_album:
             log.info("Album id found: %s" % _id_album)
-            return self.list_media_album(_id_album)
+            return self.list_media_album(_id_album, _r=[])
         else:
             log.warning("No album called '%s' found" % title)
             raise LookupError("No album called '%s' found" % title)
@@ -93,8 +93,13 @@ def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonl
 
 if __name__ == "__main__" and not __doc__:
     s = session_gphotos()
-    ida = s.album_search('wallpapers')
-    l = s.list_media_album(ida)
+    l = s.list_album_search('wallpapers')
+    url = random.choice(l)['baseUrl'] + "=w1920-h1080"
+    log.info("photo URL: %s" % url)
+    file_name, headers = urllib.request.urlretrieve(url, '/tmp/g-api.jpg')
+    cl = 'gsettings set org.cinnamon.desktop.background picture-uri ' + \
+        'file://' + file_name
+    subprocess.Popen( shlex.split(cl) )
 
 
 
