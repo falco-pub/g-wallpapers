@@ -6,7 +6,7 @@
 from apiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
-import argparse, random, subprocess, shlex, urllib.request
+import argparse, random, subprocess, shlex, urllib.request, os.path
 import logging as log
 
 def parse_arg_verbose_log():
@@ -15,6 +15,9 @@ def parse_arg_verbose_log():
                         "--verbose",
                         help="verbose logging",
                         action="store_true")
+    parser.add_argument("-c",
+                        "--creds",
+                        help="credentials file")
     args = parser.parse_args()
 
     if args.verbose:
@@ -27,6 +30,7 @@ def parse_arg_verbose_log():
         log.basicConfig(format="%(levelname)s: %(message)s")
     log.getLogger('googleapiclient.discovery_cache').setLevel(log.ERROR)
     log.getLogger('googleapiclient.discovery').setLevel(log.WARNING)
+    return args
 
 
 class Photos():
@@ -94,10 +98,13 @@ def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonl
     return Photos(scope, storefile, credsfile)
 
 
-parse_arg_verbose_log()
+args = parse_arg_verbose_log()
 
 if __name__ == "__main__" and not __doc__:
-    s = session_gphotos()
+    credsfile = args.creds if args.creds else 'creds.json'
+    storefile = os.path.join(os.path.dirname(credsfile), "token.json")
+    log.info("credsfile = %s, storefile = %s" % (credsfile, storefile))
+    s = session_gphotos(credsfile = credsfile, storefile = storefile)
     l = s.list_album_search('wallpapers')
     url = random.choice(l)['baseUrl'] + "=w1920-h1080"
     log.info("photo URL: %s" % url)
