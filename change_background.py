@@ -35,7 +35,8 @@ class Photos():
         _creds = _store.get()
         if not _creds or _creds.invalid:
             _flow = client.flow_from_clientsecrets(credsfile, scope)
-            _creds = tools.run_flow(_flow, _store)
+            _creds = tools.run_flow(_flow, _store,
+                                    flags=tools.argparser.parse_args([]) )
         self.service = build('photoslibrary', 'v1', http=_creds.authorize(Http()))
 
     def albums(self, *args, **kwargs):
