@@ -34,15 +34,29 @@ def parse_arg_verbose_log():
     return args
 
 
-class Photos():
-    def __init__(self, scope, storefile, credsfile):
+class API():
+    """Constructs a Resource for interacting with an API from
+    https://developers.google.com/discovery/v1/reference
+    based on document file load from
+    https://www.googleapis.com/discovery/v1/apis/${name}/v1/rest
+    You can use the 'service' method to acceed to that resource
+    """
+    def __init__(self, name, scope, storefile, credsfile):
         _store = file.Storage(storefile)
         _creds = _store.get()
         if not _creds or _creds.invalid:
             _flow = client.flow_from_clientsecrets(credsfile, scope)
             _creds = tools.run_flow(_flow, _store,
                                     flags=tools.argparser.parse_args([]))
-        self.service = build('photoslibrary', 'v1', http=_creds.authorize(Http()))
+        self.service = build(name, 'v1', http=_creds.authorize(Http()))
+
+
+class Photoslibrary(API):
+    """Constructs methods for interacting with Google Photos APIs
+    https://www.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest
+    """
+    def __init__(self, scope, storefile, credsfile):
+        super().__init__('photoslibrary', scope, storefile, credsfile)
 
     def albums(self, *args, **kwargs):
         return self.service.albums(*args, **kwargs)
@@ -96,7 +110,7 @@ class Photos():
 def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonly',
                     storefile='token.json',
                     credsfile='creds.json'):
-    return Photos(scope, storefile, credsfile)
+    return Photoslibrary(scope, storefile, credsfile)
 
 
 args = parse_arg_verbose_log()
@@ -122,12 +136,6 @@ if __name__ == "__main__" and not __doc__:
     cl = 'gsettings set org.cinnamon.desktop.background picture-uri ' + \
         'file://' + file_name
     subprocess.Popen(shlex.split(cl))
-
-
-
-
-
-
 
 
 
