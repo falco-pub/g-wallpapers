@@ -3,7 +3,7 @@
 
 # Setup the Photo v1 API
 # from https://github.com/ido-ran/google-photos-api-python-quickstart/blob/master/quickstart.py
-from apiclient import discovery
+from googleapiclient import discovery
 from httplib2 import Http
 from oauth2client import file, client, tools
 import argparse, random, subprocess, shlex, urllib.request, os.path
