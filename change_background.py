@@ -3,7 +3,7 @@
 
 # Setup the Photo v1 API
 # from https://github.com/ido-ran/google-photos-api-python-quickstart/blob/master/quickstart.py
-from apiclient.discovery import build
+from apiclient import discovery
 from httplib2 import Http
 from oauth2client import file, client, tools
 import argparse, random, subprocess, shlex, urllib.request, os.path
@@ -48,7 +48,7 @@ class API():
             _flow = client.flow_from_clientsecrets(credsfile, scope)
             _creds = tools.run_flow(_flow, _store,
                                     flags=tools.argparser.parse_args([]))
-        self.service = build(name, 'v1', http=_creds.authorize(Http()))
+        self.service = discovery.build(name, 'v1', http=_creds.authorize(Http()))
 
 
 class Photoslibrary(API):
