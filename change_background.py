@@ -9,6 +9,7 @@ from oauth2client import file, client, tools
 import argparse, random, subprocess, shlex, urllib.request, os.path
 import logging as log
 
+
 def parse_arg_verbose_log():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v",
@@ -21,9 +22,9 @@ def parse_arg_verbose_log():
     args = parser.parse_args()
 
     if args.verbose:
-        log.basicConfig(format="%(levelname)s %(relativeCreated)d "+
-                        "%(filename)s(%(funcName)s):%(lineno)d "+
-                        #"%(filename)s(%(funcName)s):%(lineno)d %(name)s: "+
+        log.basicConfig(format="%(levelname)s %(relativeCreated)d " +
+                        "%(filename)s(%(funcName)s):%(lineno)d " +
+                        # "%(filename)s(%(funcName)s):%(lineno)d %(name)s: "+
                         "%(message)s", level=log.DEBUG)
         log.info("Verbose output.")
     else:
@@ -40,7 +41,7 @@ class Photos():
         if not _creds or _creds.invalid:
             _flow = client.flow_from_clientsecrets(credsfile, scope)
             _creds = tools.run_flow(_flow, _store,
-                                    flags=tools.argparser.parse_args([]) )
+                                    flags=tools.argparser.parse_args([]))
         self.service = build('photoslibrary', 'v1', http=_creds.authorize(Http()))
 
     def albums(self, *args, **kwargs):
@@ -60,7 +61,7 @@ class Photos():
             pageToken=_tk).execute()
         if 'albums' in _results:
             for _i in _results['albums']:
-                if _i['title']==title:
+                if _i['title'] == title:
                     return _i['id']
         try:
             return self.album_search(title, _tk=_results['nextPageToken'])
@@ -93,25 +94,34 @@ class Photos():
 
 
 def session_gphotos(scope='https://www.googleapis.com/auth/photoslibrary.readonly',
-                 storefile='token.json',
-                 credsfile='creds.json'):
+                    storefile='token.json',
+                    credsfile='creds.json'):
     return Photos(scope, storefile, credsfile)
 
 
 args = parse_arg_verbose_log()
 
 if __name__ == "__main__" and not __doc__:
+
+    # Sets the paths to the files containing the credentials
     credsfile = args.creds if args.creds else 'creds.json'
     storefile = os.path.join(os.path.dirname(credsfile), "token.json")
     log.info("credsfile = %s, storefile = %s" % (credsfile, storefile))
-    s = session_gphotos(credsfile = credsfile, storefile = storefile)
+
+    # Sets an authenticated session to Google Api photoslibrary
+    # using discovery: https://www.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest
+    s = session_gphotos(credsfile=credsfile, storefile=storefile)
+
+    # Choses a random wallpaper and appends wanted resolution to URL
     l = s.list_album_search('wallpapers')
     url = random.choice(l)['baseUrl'] + "=w1920-h1080"
     log.info("photo URL: %s" % url)
+
+    # Saves the wallpaper to /tmp/ and invokes gnome-settings through shell
     file_name, headers = urllib.request.urlretrieve(url, '/tmp/g-api.jpg')
     cl = 'gsettings set org.cinnamon.desktop.background picture-uri ' + \
         'file://' + file_name
-    subprocess.Popen( shlex.split(cl) )
+    subprocess.Popen(shlex.split(cl))
 
 
 
