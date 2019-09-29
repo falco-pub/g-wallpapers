@@ -33,18 +33,19 @@ def parse_arg_verbose_log():
 
 
 args = parse_arg_verbose_log()
+# Sets the paths to the files containing the credentials
+credsfile = args.creds if args.creds else 'creds.json'
+storefile = os.path.join(os.path.dirname(credsfile), "token.json")
+logging.info("credsfile = %s, storefile = %s" % (credsfile, storefile))
+scope = 'https://www.googleapis.com/auth/photoslibrary.readonly';
+
 
 if __name__ == "__main__" and not __doc__:
-
-    # Sets the paths to the files containing the credentials
-    credsfile = args.creds if args.creds else 'creds.json'
-    storefile = os.path.join(os.path.dirname(credsfile), "token.json")
-    logging.info("credsfile = %s, storefile = %s" % (credsfile, storefile))
 
     # Sets an authenticated session to Google Api photoslibrary
     # using discovery: https://www.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest
     s = googleAPI.Photoslibrary(
-        scope='https://www.googleapis.com/auth/photoslibrary.readonly',
+        scope=scope,
         storefile=storefile,
         credsfile=credsfile)
 
