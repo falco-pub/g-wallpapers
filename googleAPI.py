@@ -1,16 +1,16 @@
+import logging
+
 from googleapiclient import discovery
 from httplib2 import Http
 from oauth2client import file, client, tools
-import argparse
-import logging
 
 
-class API():
+class API:
     """Constructs a Resource for interacting with an API from
     https://developers.google.com/discovery/v1/reference
     based on document file load from
     https://www.googleapis.com/discovery/v1/apis/${name}/v1/rest
-    You can use the 'service' method to acceed to that resource
+    You can use the 'service' method to access to that resource
     """
     def __init__(self, name, scope, storefile, credsfile):
         _store = file.Storage(storefile)
@@ -39,7 +39,7 @@ class Photoslibrary(API):
         return self.service.sharedAlbums(*args, **kwargs)
 
     def album_search(self, title, _tk=None):
-        "return id of album which title is 'title'"
+        """return id of album which title is 'title'"""
 
         _results = self.albums().list(
             pageSize=50, fields="nextPageToken,albums(id,title)",
@@ -54,8 +54,10 @@ class Photoslibrary(API):
             logging.info("No album found")
             return None
 
-    def list_media_album(self, albumId, _tk=None, _r=[]):
-        "return a list of media items in album"
+    def list_media_album(self, albumId, _tk=None, _r=None):
+        """return a list of media items in album"""
+        if _r is None:
+            _r = []
         _results = self.mediaItems().search(body={
             'albumId': albumId,
             'pageToken': _tk}).execute()
@@ -68,7 +70,7 @@ class Photoslibrary(API):
             return _r
 
     def list_album_search(self, title):
-        "return a list of ID's of media in album 'title'"
+        """return a list of ID's of media in album 'title'"""
         _id_album = self.album_search(title)
         if _id_album:
             logging.info("Album id found: %s" % _id_album)
